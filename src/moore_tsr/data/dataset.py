@@ -1,5 +1,6 @@
-from .cache import save_to_cache, load_from_cache
 from typing import Tuple
+import pandas as pd
+from .cache import save_to_cache, load_from_cache
 
 def load_split_data(
     dataset_name: str = "sawadogosalif/MooreFRCollections",
