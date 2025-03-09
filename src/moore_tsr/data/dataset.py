@@ -26,11 +26,12 @@ def load_split_data(
     Returns:
         Tuple[pd.DataFrame, pd.DataFrame, pd.DataFrame]: DataFrames pour train, val, test
     """
-    # Chargement du dataset
+    logger.info("Chargement du dataset")
     dataset = load_dataset(dataset_name, split="train")
     df = dataset.to_pandas()
     
-    # Mélange des données
+    
+    logger.info("Mélange des données")
     df = df.sample(frac=1, random_state=random_seed).reset_index(drop=True)
     
     # Division des données
@@ -38,12 +39,12 @@ def load_split_data(
     train_end = int(n * train_size)
     test_end = train_end + int(n * test_size)
     
-    # Ajout d'une colonne 'split'
+    logger.info("Ajout d'une colonne 'split'")
     df["split"] = "train"
     df.loc[train_end:test_end, "split"] = "test"
     df.loc[test_end:, "split"] = "val"
     
-    # Prétraitement des textes
+    logger.info("Prétraitement des textes")
     df["french"] = df["french"].swifter.apply(preprocess_text)
     df["moore"] = df["moore"].swifter.apply(preprocess_text)
     
