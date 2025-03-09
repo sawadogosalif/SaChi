@@ -1,3 +1,4 @@
+loguru
 
 torch>=2.0.0
 transformers==4.33.0
