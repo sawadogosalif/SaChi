@@ -1,8 +1,8 @@
 import pandas as pd
 from loguru  import logger
 
-import swifter
-swifter.set_defaults(force_parallel=True)
+from pandarallel import pandarallel
+pandarallel.initialize(nb_workers=-1, progress_bar=True)
 
 from datasets import load_dataset
 from typing import Tuple
@@ -47,8 +47,8 @@ def load_split_data(
     df.loc[test_end:, "split"] = "val"
     
     logger.info("Prétraitement des textes")
-    df["french"] = df["french"].swifter.apply(preprocess_text)
-    df["moore"] = df["moore"].swifter.apply(preprocess_text)
+    df["french"] = df["french"].parallel_apply(preprocess_text)
+    df["moore"] = df["moore"].parallel_apply(preprocess_text)
     
     # Création des sous-ensembles
     train_df = df[df["split"] == "train"].copy()
