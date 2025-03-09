@@ -2,6 +2,7 @@ import argparse
 from moore_tsr.training.train import train_model
 from moore_tsr.training.model_setup import setup_model_and_tokenizer
 from moore_tsr.data.dataset import load_split_data
+from loguru import logger
 
 def main():
 
@@ -19,6 +20,8 @@ def main():
     args = parser.parse_args()
 
     train_df, val_df, test_df = load_split_data()
+    print(args.model_name)
+    logger.info(args.model_name)
 
     model, tokenizer = setup_model_and_tokenizer(model_name=args.model_name)
 
