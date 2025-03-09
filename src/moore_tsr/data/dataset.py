@@ -2,9 +2,12 @@ from typing import Tuple
 import pandas as pd
 from loguru import logger
 from datasets import load_dataset
+from pandarallel import pandarallel
 
 from .preprocessing import preprocess_text
 from .cache import save_to_cache, load_from_cache
+
+pandarallel.initialize(nb_workers=-1, progress_bar=True)  # Ajuster selon le nombre de cœurs dispo
 
 def load_split_data(
     dataset_name: str = "sawadogosalif/MooreFRCollections",
