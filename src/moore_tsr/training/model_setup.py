@@ -1,7 +1,6 @@
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 from typing import Tuple
 from loguru import logger
-la library transformers a beaucoup evolué dernièrement.
 
 """Note 1 : You are resizing the embedding layer without providing a `pad_to_multiple_of` parameter. This means that the new embedding dimension will be 256205. This might induce some performance reduction as *Tensor Cores* will not be available. For more details about this, or help on choosing the correct value for resizing, refer to this guide: https://docs.nvidia.com/deeplearning/performance/dl-performance-matrix-multiplication/index.html#requirements-tc
 Le message d’avertissement vient de **Hugging Face Transformers** et fait référence aux exigences des **Tensor Cores** de NVIDIA.  NVIDIA recommande que les tailles des tenseurs (comme l’embedding layer) soient des multiples de **8, 16 ou 32** pour maximiser l'utilisation des **Tensor Cores**, qui accélèrent les calculs de multiplication matricielle en virgule flottante. C’est documenté ici :  
