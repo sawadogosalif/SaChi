@@ -1,4 +1,7 @@
 import pandas as pd
+import swifter
+swifter.set_defaults(force_parallel=True)
+
 from datasets import load_dataset
 from typing import Tuple
 from .preprocessing import preprocess_text
@@ -41,8 +44,8 @@ def load_split_data(
     df.loc[test_end:, "split"] = "val"
     
     # Prétraitement des textes
-    df["french"] = df["french"].apply(preprocess_text)
-    df["moore"] = df["moore"].apply(preprocess_text)
+    df["french"] = df["french"].swifter.apply(preprocess_text)
+    df["moore"] = df["moore"].swifter.apply(preprocess_text)
     
     # Création des sous-ensembles
     train_df = df[df["split"] == "train"].copy()
