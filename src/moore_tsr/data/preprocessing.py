@@ -9,7 +9,6 @@ mpn = MosesPunctNormalizer(lang="en")
 # Précompiler les regex des substitutions pour éviter de les recréer à chaque appel
 mpn.substitutions = [(re.compile(r), sub) for r, sub in mpn.substitutions]
 
-# Fonction optimisée de nettoyage
 def preprocess_text(text: str) -> str:
     if not text or not isinstance(text, str):
         return ""
