@@ -19,6 +19,7 @@ def setup_model_and_tokenizer(
         Tuple[AutoModelForSeq2SeqLM, AutoTokenizer]: Modèle et tokenizer configurés.
     """
     # Chargement du tokenizer
+    logger.info(f"Model name {model_name}")
     tokenizer = AutoTokenizer.from_pretrained(model_name)
     logger.info(f"tokenize loaded.")
 
