@@ -1,0 +1,23 @@
+model:
+  name: "facebook/nllb-200-distilled-600M"
+  save_path: "./models/nllb-moore-finetuned"
+  new_lang_code: "moore_open"
+
+training:
+  batch_size: 16
+  num_epochs: 3
+  learning_rate: 5e-5
+  warmup_steps: 1000
+  max_length: 128
+
+data:
+  dataset_name: "sawadogosalif/MooreFRCollections"
+  train_size: 0.8
+  test_size: 0.1
+  val_size: 0.1
+  random_seed: 42
+
+evaluation:
+  num_samples: 10
+  num_beams: 5
+  no_repeat_ngram_size: 3

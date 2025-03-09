@@ -1,0 +1,20 @@
+
+torch>=2.0.0
+transformers==4.33.0
+datasets>=2.14.0
+sacrebleu
+sacremoses
+sentencepiece
+
+# Visualisation
+plotly>=5.15.0
+pandas>=2.0.0
+
+# Gestion des logs et utilitaires
+tqdm>=4.65.0
+numpy>=1.23.0
+
+# Développement (optionnel)
+black>=23.7.0
+flake8>=6.0.0
+pytest>=7.4.0
