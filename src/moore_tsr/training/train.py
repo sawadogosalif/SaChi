@@ -1,16 +1,16 @@
 import pandas as pd
 import torch
 from torch.optim import AdamW
-from transformers import get_scheduler, NllbTokenizer, AutoModelForSeq2SeqLM
+from transformers import get_scheduler, AutoTokenizer, AutoModelForSeq2SeqLM
 
 from tqdm.auto import tqdm
-from data.dataset import get_batch_pairs
+from moore_tsr.data.dataset import get_batch_pairs
 
 from loguru import logger
 
 def train_model(
     model: AutoModelForSeq2SeqLM,
-    tokenizer: NllbTokenizer,
+    tokenizer: AutoTokenizer,
     train_df: pd.DataFrame,
     val_df: pd.DataFrame,
     num_epochs: int = 3,
@@ -25,7 +25,7 @@ def train_model(
 
     Args:
         model (AutoModelForSeq2SeqLM): Modèle à entraîner.
-        tokenizer (NllbTokenizer): Tokenizer configuré.
+        tokenizer (AutoTokenizer): Tokenizer configuré.
         train_df (pd.DataFrame): Données d'entraînement.
         val_df (pd.DataFrame): Données de validation.
         num_epochs (int): Nombre d'époques.

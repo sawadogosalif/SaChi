@@ -1,10 +1,12 @@
-from transformers import AutoModelForSeq2SeqLM, NllbTokenizer
+from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
+from typing import Tuple
+from loguru import logger
 
 def setup_model_and_tokenizer(
     model_name: str = "facebook/nllb-200-distilled-600M",
     new_lang_code: str = "moore_open",
     device: str = "cuda",
-) -> tp.Tuple[AutoModelForSeq2SeqLM, NllbTokenizer]:
+) -> Tuple[AutoModelForSeq2SeqLM, AutoTokenizer]:
     """
     Initialise le modèle et le tokenizer, et ajoute un nouveau token de langue.
 
@@ -14,11 +16,12 @@ def setup_model_and_tokenizer(
         device (str): Device à utiliser ("cuda" ou "cpu").
 
     Returns:
-        Tuple[AutoModelForSeq2SeqLM, NllbTokenizer]: Modèle et tokenizer configurés.
+        Tuple[AutoModelForSeq2SeqLM, AutoTokenizer]: Modèle et tokenizer configurés.
     """
     # Chargement du tokenizer
-    tokenizer = NllbTokenizer.from_pretrained(model_name)
-    
+    tokenizer = AutoTokenizer.from_pretrained(model_name)
+    logger.info(f"tokenize loaded.")
+
     # Ajout du nouveau token de langue
     old_len = len(tokenizer) - int(new_lang_code in tokenizer.added_tokens_encoder)
     tokenizer.lang_code_to_id[new_lang_code] = old_len - 1
@@ -26,7 +29,10 @@ def setup_model_and_tokenizer(
     
     # Chargement du modèle
     model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
+    logger.info(f"Model loaded.")
+
     model.resize_token_embeddings(len(tokenizer))
     model.to(device)
-    
+
+
     return model, tokenizer

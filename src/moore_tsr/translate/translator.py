@@ -1,11 +1,11 @@
-from typing import List, Optional
+from typing import List, Optional, Tuple
 import torch
-from transformers import AutoModelForSeq2SeqLM, NllbTokenizer
+from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 
 def load_translation_pipeline(
     model_path: str,
     device: Optional[str] = None,
-) -> tp.Tuple[AutoModelForSeq2SeqLM, NllbTokenizer]:
+) -> Tuple[AutoModelForSeq2SeqLM, AutoTokenizer]:
     """
     Charge le modèle et le tokenizer pour la traduction.
 
@@ -14,13 +14,13 @@ def load_translation_pipeline(
         device (str, optional): Device à utiliser ("cuda" ou "cpu"). Par défaut, détecte automatiquement.
 
     Returns:
-        Tuple[AutoModelForSeq2SeqLM, NllbTokenizer]: Modèle et tokenizer chargés.
+        Tuple[AutoModelForSeq2SeqLM, AutoTokenizer]: Modèle et tokenizer chargés.
     """
     if device is None:
         device = "cuda" if torch.cuda.is_available() else "cpu"
     
     # Chargement du tokenizer
-    tokenizer = NllbTokenizer.from_pretrained(model_path)
+    tokenizer = AutoTokenizer.from_pretrained(model_path)
     
     # Chargement du modèle
     model = AutoModelForSeq2SeqLM.from_pretrained(model_path)
@@ -31,7 +31,7 @@ def load_translation_pipeline(
 
 def translate_text(
     model: AutoModelForSeq2SeqLM,
-    tokenizer: NllbTokenizer,
+    tokenizer: AutoTokenizer,
     texts: List[str],
     src_lang: str = "fra_Latn",
     tgt_lang: str = "moore_open",
@@ -44,7 +44,7 @@ def translate_text(
 
     Args:
         model (AutoModelForSeq2SeqLM): Modèle de traduction.
-        tokenizer (NllbTokenizer): Tokenizer configuré.
+        tokenizer (AutoTokenizer): Tokenizer configuré.
         texts (List[str]): Textes à traduire.
         src_lang (str): Code de la langue source.
         tgt_lang (str): Code de la langue cible.

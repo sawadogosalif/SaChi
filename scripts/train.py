@@ -1,7 +1,7 @@
 import argparse
-from src.training.train import train_model
-from src.training.model_setup import setup_model_and_tokenizer
-from src.data.dataset import load_split_data
+from moore_tsr.training.train import train_model
+from moore_tsr.training.model_setup import setup_model_and_tokenizer
+from moore_tsr.data.dataset import load_split_data
 
 def main():
 

@@ -1,7 +1,7 @@
 import pandas as pd
 from typing import List, Dict
 from transformers import AutoModelForSeq2SeqLM, NllbTokenizer
-from data.preprocessing import preprocess_text
+from moore_tsr.data.preprocessing import preprocess_text
 
 def evaluate_qualitative(
     model: AutoModelForSeq2SeqLM,

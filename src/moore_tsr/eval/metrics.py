@@ -2,12 +2,12 @@ from typing import Dict, List
 import pandas as pd
 from sacrebleu import corpus_bleu
 from tqdm.auto import tqdm
-from transformers import AutoModelForSeq2SeqLM, NllbTokenizer
-from data.preprocessing import preprocess_text
+from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
+from moore_tsr.data.preprocessing import preprocess_text
 
 def calculate_bleu_scores(
     model: AutoModelForSeq2SeqLM,
-    tokenizer: NllbTokenizer,
+    tokenizer: AutoTokenizer,
     df: pd.DataFrame,
     src_lang: str = "fra_Latn",
     tgt_lang: str = "moore_open",
@@ -20,7 +20,7 @@ def calculate_bleu_scores(
 
     Args:
         model (AutoModelForSeq2SeqLM): Modèle de traduction.
-        tokenizer (NllbTokenizer): Tokenizer configuré.
+        tokenizer (AutoTokenizer): Tokenizer configuré.
         df (pd.DataFrame): DataFrame contenant les données de test.
         src_lang (str): Code de la langue source.
         tgt_lang (str): Code de la langue cible.
@@ -67,7 +67,7 @@ def calculate_bleu_scores(
 
 def evaluate_model_with_bleu(
     model: AutoModelForSeq2SeqLM,
-    tokenizer: NllbTokenizer,
+    tokenizer: AutoTokenizer,
     df_test: pd.DataFrame,
 ) -> Dict[str, float]:
     """
@@ -75,7 +75,7 @@ def evaluate_model_with_bleu(
 
     Args:
         model (AutoModelForSeq2SeqLM): Modèle à évaluer.
-        tokenizer (NllbTokenizer): Tokenizer configuré.
+        tokenizer (AutoTokenizer): Tokenizer configuré.
         df_test (pd.DataFrame): Données de test.
 
     Returns:
