@@ -31,7 +31,7 @@ def load_split_data(
     dataset = load_dataset(dataset_name, split="train")
     df = dataset.to_pandas()
 
-    logger.info("Mélange des données")
+    logger.info(f"Mélange des données : {len(df)} rows")
     df = df.sample(frac=1, random_state=random_seed).reset_index(drop=True)
 
     # Division des données
