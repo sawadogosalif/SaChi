@@ -47,3 +47,28 @@ def load_split_data(
     save_to_cache(train_df, val_df, test_df)
 
     return train_df, val_df, test_df
+
+
+
+def get_batch_pairs(
+    df: pd.DataFrame,
+    batch_size: int,
+    src_lang: str = "french",
+    tgt_lang: str = "moore",
+) -> Tuple[list, list]:
+    """
+    Génère un batch de paires de traduction.
+    
+    Args:
+        df (pd.DataFrame): DataFrame contenant les données
+        batch_size (int): Taille du batch
+        src_lang (str): Langue source
+        tgt_lang (str): Langue cible
+    
+    Returns:
+        Tuple[list, list]: Paires de textes (source, cible)
+    """
+    batch = df.sample(batch_size, random_state=42)
+    src_texts = batch[src_lang].tolist()
+    tgt_texts = batch[tgt_lang].tolist()
+    return src_texts, tgt_texts
