@@ -1,7 +1,6 @@
 import re
 import unicodedata
 import pandas as pd
-import swifter
 from sacremoses import MosesPunctNormalizer
 
 mpn = MosesPunctNormalizer(lang="en")
