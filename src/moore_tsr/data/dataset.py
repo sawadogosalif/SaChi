@@ -1,4 +1,6 @@
 import pandas as pd
+from loguru  import logger
+
 import swifter
 swifter.set_defaults(force_parallel=True)
 
