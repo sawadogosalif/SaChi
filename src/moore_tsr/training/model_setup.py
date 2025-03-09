@@ -52,12 +52,10 @@ def setup_model_and_tokenizer(
     # Chargement du tokenizer
     logger.info(f"Model name {model_name}")
     tokenizer = AutoTokenizer.from_pretrained(model_name)
-    logger.info(f"tokenize loaded.")
+    logger.info(f"tokenize loaded and leen is {len(tokenizer)}.")
 
     # Ajout du nouveau token de langue
-    old_len = len(tokenizer) - int(new_lang_code in tokenizer.added_tokens_encoder)
-    tokenizer.lang_code_to_id[new_lang_code] = old_len - 1
-    tokenizer.id_to_lang_code[old_len - 1] = new_lang_code
+    tokenizer.add_special_tokens({"additional_special_tokens": [new_lang_code]})
     
     # Chargement du modèle
     model = AutoModelForSeq2SeqLM.from_pretrained(model_name)
@@ -65,6 +63,8 @@ def setup_model_and_tokenizer(
     
     new_vocab_size = (len(tokenizer) + 7) // 8 * 8  # Arrondi au multiple de 8 : Voir Note 1
     model.resize_token_embeddings(new_vocab_size)
+    logger.info(f"new token length {len(tokenizer)}")
+
     model.to(device)
 
 
