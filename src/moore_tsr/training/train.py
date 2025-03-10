@@ -7,6 +7,8 @@ from tqdm.auto import tqdm
 from moore_tsr.data.dataset import get_batch_pairs
 
 from loguru import logger
+import gc
+
 
 def train_model(
     model: AutoModelForSeq2SeqLM,
@@ -52,6 +54,7 @@ def train_model(
         
         for i in progress_bar:
             # Génération d'un batch
+            torch.cuda.empty_cache()
             src_texts, tgt_texts = get_batch_pairs(train_df, batch_size)
             
             # Tokenisation des entrées et sorties
