@@ -2,13 +2,12 @@ import pandas as pd
 import torch
 from torch.optim import AdamW
 from transformers import get_scheduler, AutoTokenizer, AutoModelForSeq2SeqLM
-
 from tqdm.auto import tqdm
 from moore_tsr.data.dataset import get_batch_pairs
-
 from loguru import logger
 import gc
-
+import matplotlib.pyplot as plt
+import os
 
 def train_model(
     model: AutoModelForSeq2SeqLM,
@@ -20,7 +19,8 @@ def train_model(
     learning_rate: float = 5e-5,
     warmup_steps: int = 1000,
     device: str = "cuda",
-    save_path: str = "./models/nllb-moore-finetuned",
+    save_path: str = "./models/finetuned",
+    resume_from_epoch: int = 0
 ) -> None:
     """
     Entraîne le modèle de traduction.
@@ -36,7 +36,22 @@ def train_model(
         warmup_steps (int): Nombre de pas de warmup.
         device (str): Device à utiliser ("cuda" ou "cpu").
         save_path (str): Chemin pour sauvegarder le modèle.
+        resume_from_epoch (int): Époque à partir de laquelle reprendre l'entraînement.
     """
+    # Check if Google Drive is mounted
+    drive_mounted = os.path.exists("/content/drive/MyDrive")
+    if drive_mounted:
+        drive_save_path = f"/content/drive/MyDrive/{save_path}"
+        os.makedirs(drive_save_path, exist_ok=True)
+        print(f"Google Drive is mounted. Models will also be saved to: {drive_save_path}")
+    
+    # Charger le modèle et le tokenizer si on reprend l'entraînement
+    if resume_from_epoch > 0:
+        print(f"Reprise de l'entraînement à partir de l'époque {resume_from_epoch}...")
+        model_path = f"{save_path}/epoch_{resume_from_epoch}"
+        model = AutoModelForSeq2SeqLM.from_pretrained(model_path).to(device)
+        tokenizer = AutoTokenizer.from_pretrained(model_path)
+    
     # Optimiseur et scheduler
     optimizer = AdamW(model.parameters(), lr=learning_rate)
     scheduler = get_scheduler(
@@ -46,9 +61,12 @@ def train_model(
         num_training_steps=num_epochs * len(train_df) // batch_size,
     )
     
+    # Initialisation des pertes
+    losses = []
+    
     # Boucle d'entraînement
     model.train()
-    for epoch in range(num_epochs):
+    for epoch in range(resume_from_epoch, num_epochs):  # Commencer à l'époque spécifiée
         print(f"=== Époque {epoch + 1}/{num_epochs} ===")
         progress_bar = tqdm(range(0, len(train_df), batch_size), desc="Entraînement")
         
@@ -75,9 +93,41 @@ def train_model(
             scheduler.step()
             optimizer.zero_grad()
             
+            # Enregistrement de la perte
+            losses.append(loss.item())
+            
             # Mise à jour de la barre de progression
             progress_bar.set_postfix({"loss": loss.item()})
         
-        # Sauvegarde du modèle après chaque époch
-        model.save_pretrained(f"{save_path}/epoch_{epoch + 1}")
-        tokenizer.save_pretrained(f"{save_path}/epoch_{epoch + 1}")
+        # Sauvegarde du modèle après chaque époque
+        epoch_save_path = f"{save_path}/epoch_{epoch + 1}"
+        model.save_pretrained(epoch_save_path)
+        tokenizer.save_pretrained(epoch_save_path)
+        
+        # Sauvegarde sur Google Drive si monté
+        if drive_mounted:
+            drive_epoch_save_path = f"{drive_save_path}/epoch_{epoch + 1}"
+            model.save_pretrained(drive_epoch_save_path)
+            tokenizer.save_pretrained(drive_epoch_save_path)
+    
+    # Visualisation des pertes
+    losses_series = pd.Series(losses)
+    losses_ewm = losses_series.ewm(span=100).mean()  # Moyenne mobile exponentielle
+    
+    plt.figure(figsize=(12, 6))
+    plt.plot(losses_series, label="Perte brute", alpha=0.5)
+    plt.plot(losses_ewm, label="Moyenne mobile (span=100)", color="red")
+    plt.title("Évolution de la perte pendant l'entraînement")
+    plt.xlabel("Étapes")
+    plt.ylabel("Perte")
+    plt.legend()
+    plt.grid(True)
+    
+    # Sauvegarde du graphique dans le workspace
+    workspace_plot_path = f"{save_path}/training_loss.png"
+    plt.savefig(workspace_plot_path)
+    if drive_mounted:
+        drive_plot_path = f"{drive_save_path}/training_loss.png"
+        plt.savefig(drive_plot_path)
+    
+    plt.show()
