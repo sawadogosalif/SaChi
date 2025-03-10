@@ -61,7 +61,6 @@ def train_model(
         num_training_steps=num_epochs * len(train_df) // batch_size,
     )
     
-    # Initialisation des pertes
     losses = []
     
     # Boucle d'entraînement
@@ -93,10 +92,7 @@ def train_model(
             scheduler.step()
             optimizer.zero_grad()
             
-            # Enregistrement de la perte
             losses.append(loss.item())
-            
-            # Mise à jour de la barre de progression
             progress_bar.set_postfix({"loss": loss.item()})
         
         # Sauvegarde du modèle après chaque époque
@@ -123,7 +119,6 @@ def train_model(
     plt.legend()
     plt.grid(True)
     
-    # Sauvegarde du graphique dans le workspace
     workspace_plot_path = f"{save_path}/training_loss.png"
     plt.savefig(workspace_plot_path)
     if drive_mounted:
