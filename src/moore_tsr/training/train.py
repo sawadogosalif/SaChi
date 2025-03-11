@@ -116,7 +116,7 @@ def train_model(
                 val_loss += outputs.loss.item()
         
         val_loss /= len(val_df) // batch_size
-        val_losses.extend([val_loss] * (len(train_df) // batch_size))  # Répéter pour chaque étape
+        val_losses.append(outputs.loss.item())
         
         print(f"training loss (moyenne) : {sum(train_losses[-len(train_df) // batch_size:]) / (len(train_df) // batch_size):.4f}, "
               f"Val loss : {val_loss:.4f}")
