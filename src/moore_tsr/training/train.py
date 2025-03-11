@@ -6,7 +6,7 @@ from tqdm.auto import tqdm
 from moore_tsr.data.dataset import get_batch_pairs
 from loguru import logger
 import gc
-import matplotlib.pyplot as plt
+import plotly.express as px
 import os
 
 def train_model(
@@ -19,11 +19,12 @@ def train_model(
     learning_rate: float = 5e-5,
     warmup_steps: int = 1000,
     device: str = "cuda",
-    save_path: str = "./models/finetuned",
-    resume_from_epoch: int = 0
+    save_path: str = "./models/nllb-moore-finetuned",
+    resume_from_epoch: int = 0,
+    early_stopping_patience: int = 3,  # Nombre d'époques pour early stopping
 ) -> None:
     """
-    Entraîne le modèle de traduction.
+    Entraîne le modèle de traduction avec validation.
 
     Args:
         model (AutoModelForSeq2SeqLM): Modèle à entraîner.
@@ -37,6 +38,7 @@ def train_model(
         device (str): Device à utiliser ("cuda" ou "cpu").
         save_path (str): Chemin pour sauvegarder le modèle.
         resume_from_epoch (int): Époque à partir de laquelle reprendre l'entraînement.
+        early_stopping_patience (int): Nombre d'époques sans amélioration avant arrêt prématuré.
     """
     # Check if Google Drive is mounted
     drive_mounted = os.path.exists("/content/drive/MyDrive")
@@ -61,14 +63,19 @@ def train_model(
         num_training_steps=num_epochs * len(train_df) // batch_size,
     )
     
-    losses = []
+    # Initialisation des pertes
+    train_losses = []
+    val_losses = []
+    best_val_loss = float("inf")
+    epochs_without_improvement = 0
     
-    # Boucle d'entraînement
     model.train()
-    for epoch in range(resume_from_epoch, num_epochs):  # Commencer à l'époque spécifiée
+    for epoch in range(resume_from_epoch, num_epochs):
         print(f"=== Époque {epoch + 1}/{num_epochs} ===")
-        progress_bar = tqdm(range(0, len(train_df), batch_size), desc="Entraînement")
         
+        # Entraînement
+        train_loss = 0.0
+        progress_bar = tqdm(range(0, len(train_df), batch_size), desc="Entraînement")
         for i in progress_bar:
             # Génération d'un batch
             torch.cuda.empty_cache()
@@ -92,8 +99,41 @@ def train_model(
             scheduler.step()
             optimizer.zero_grad()
             
-            losses.append(loss.item())
-            progress_bar.set_postfix({"loss": loss.item()})
+            # Enregistrement de la perte
+            train_loss += loss.item()
+            progress_bar.set_postfix({"train_loss": loss.item()})
+        
+        # Calcul de la perte moyenne d'entraînement
+        train_loss /= len(train_df) // batch_size
+        train_losses.append(train_loss)
+        
+        # Validation
+        model.eval()
+        val_loss = 0.0
+        with torch.no_grad():
+            for i in range(0, len(val_df), batch_size):
+                src_texts, tgt_texts = get_batch_pairs(val_df, batch_size)
+                inputs = tokenizer(src_texts, return_tensors="pt", padding=True, truncation=True, max_length=128)
+                labels = tokenizer(tgt_texts, return_tensors="pt", padding=True, truncation=True, max_length=128).input_ids
+                inputs = {k: v.to(device) for k, v in inputs.items()}
+                labels = labels.to(device)
+                outputs = model(**inputs, labels=labels)
+                val_loss += outputs.loss.item()
+        
+        # Calcul de la perte moyenne de validation
+        val_loss /= len(val_df) // batch_size
+        val_losses.append(val_loss)
+        print(f"Perte d'entraînement : {train_loss:.4f}, Perte de validation : {val_loss:.4f}")
+        
+        # Early stopping
+        if val_loss < best_val_loss:
+            best_val_loss = val_loss
+            epochs_without_improvement = 0
+        else:
+            epochs_without_improvement += 1
+            if epochs_without_improvement >= early_stopping_patience:
+                print(f"Early stopping après {epoch + 1} époques sans amélioration.")
+                break
         
         # Sauvegarde du modèle après chaque époque
         epoch_save_path = f"{save_path}/epoch_{epoch + 1}"
@@ -106,23 +146,24 @@ def train_model(
             model.save_pretrained(drive_epoch_save_path)
             tokenizer.save_pretrained(drive_epoch_save_path)
     
-    # Visualisation des pertes
-    losses_series = pd.Series(losses)
-    losses_ewm = losses_series.ewm(span=100).mean()  # Moyenne mobile exponentielle
+    df_losses = pd.DataFrame({
+        "Step": range(len(train_losses)),
+        "Train Loss": train_losses,
+        "Validation Loss": val_losses,
+    })
     
-    plt.figure(figsize=(12, 6))
-    plt.plot(losses_series, label="Perte brute", alpha=0.5)
-    plt.plot(losses_ewm, label="Moyenne mobile (span=100)", color="red")
-    plt.title("Évolution de la perte pendant l'entraînement")
-    plt.xlabel("Étapes")
-    plt.ylabel("Perte")
-    plt.legend()
-    plt.grid(True)
+    fig = px.line(df_losses, x="Step", y=["Train Loss", "Validation Loss"], 
+                  title="Évolution des pertes pendant l'entraînement",
+                  labels={"value": "Perte", "variable": "Légende"},
+                  template="plotly_white")
     
-    workspace_plot_path = f"{save_path}/training_loss.png"
-    plt.savefig(workspace_plot_path)
+    fig.show()
+    
+    # Sauvegarde du graphique dans le workspace
+    workspace_plot_path = f"{save_path}/training_validation_loss.html"
+    fig.write_html(workspace_plot_path)
+    
+    # Sauvegarde du graphique sur Google Drive si monté
     if drive_mounted:
-        drive_plot_path = f"{drive_save_path}/training_loss.png"
-        plt.savefig(drive_plot_path)
-    
-    plt.show()
+        drive_plot_path = f"{drive_save_path}/training_validation_loss.html"
+        fig.write_html(drive_plot_path)
