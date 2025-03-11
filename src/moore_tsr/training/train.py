@@ -8,6 +8,7 @@ from loguru import logger
 import gc
 import plotly.express as px
 import os
+from sklearn.utils import shuffle
 
 def train_model(
     model: AutoModelForSeq2SeqLM,
@@ -63,18 +64,16 @@ def train_model(
         num_training_steps=num_epochs * len(train_df) // batch_size,
     )
     
-    # Initialisation des pertes
-    train_losses = []
-    val_losses = []
+    train_losses = []  
+    val_losses = []   
     best_val_loss = float("inf")
     epochs_without_improvement = 0
     
     model.train()
     for epoch in range(resume_from_epoch, num_epochs):
         print(f"=== Époque {epoch + 1}/{num_epochs} ===")
-        
+        train_df = shuffle(train_df)
         # Entraînement
-        train_loss = 0.0
         progress_bar = tqdm(range(0, len(train_df), batch_size), desc="Entraînement")
         for i in progress_bar:
             # Génération d'un batch
@@ -99,13 +98,9 @@ def train_model(
             scheduler.step()
             optimizer.zero_grad()
             
-            # Enregistrement de la perte
-            train_loss += loss.item()
+            # Enregistrement de la perte brute
+            train_losses.append(loss.item())
             progress_bar.set_postfix({"train_loss": loss.item()})
-        
-        # Calcul de la perte moyenne d'entraînement
-        train_loss /= len(train_df) // batch_size
-        train_losses.append(train_loss)
         
         # Validation
         model.eval()
@@ -120,10 +115,11 @@ def train_model(
                 outputs = model(**inputs, labels=labels)
                 val_loss += outputs.loss.item()
         
-        # Calcul de la perte moyenne de validation
         val_loss /= len(val_df) // batch_size
-        val_losses.append(val_loss)
-        print(f"Perte d'entraînement : {train_loss:.4f}, Perte de validation : {val_loss:.4f}")
+        val_losses.extend([val_loss] * (len(train_df) // batch_size))  # Répéter pour chaque étape
+        
+        print(f"training loss (moyenne) : {sum(train_losses[-len(train_df) // batch_size:]) / (len(train_df) // batch_size):.4f}, "
+              f"Val loss : {val_loss:.4f}")
         
         # Early stopping
         if val_loss < best_val_loss:
@@ -151,15 +147,13 @@ def train_model(
         "Train Loss": train_losses,
         "Validation Loss": val_losses,
     })
-    
+        
     fig = px.line(df_losses, x="Step", y=["Train Loss", "Validation Loss"], 
                   title="Évolution des pertes pendant l'entraînement",
-                  labels={"value": "Perte", "variable": "Légende"},
+                  labels={"value": "loss", "variable": "Légende"},
                   template="plotly_white")
     
     fig.show()
-    
-    # Sauvegarde du graphique dans le workspace
     workspace_plot_path = f"{save_path}/training_validation_loss.html"
     fig.write_html(workspace_plot_path)
     
