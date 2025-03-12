@@ -25,10 +25,10 @@ def main():
     script_dir = os.path.dirname(os.path.abspath(__file__))  # Directory of the script
     config_path = os.path.join(script_dir, "..", args.config)  # Resolve relative path
     config_path = os.path.abspath(config_path)  # Convert to absolute path
-    model_path = config["model"]["save_path"]
 
     # Load configuration
     config = load_config(config_path)
+    model_path = config["model"]["save_path"]
 
     # Load the test dataset
     _, _, test_df = load_split_data(
