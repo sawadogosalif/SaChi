@@ -2,10 +2,11 @@
 
 import argparse
 import os
+import json
 import yaml
-from src.eval.metrics import evaluate_model_with_bleu
-from src.training.model_setup import setup_model_and_tokenizer
-from src.data.dataset import load_split_data
+from moore_tsr.eval.metrics import evaluate_model_with_bleu
+from moore_tsr.training.model_setup import setup_model_and_tokenizer
+from moore_tsr.data.dataset import load_split_data
 
 def load_config(config_path: str) -> dict:
     """Load configuration from a YAML file."""
@@ -24,6 +25,7 @@ def main():
     script_dir = os.path.dirname(os.path.abspath(__file__))  # Directory of the script
     config_path = os.path.join(script_dir, "..", args.config)  # Resolve relative path
     config_path = os.path.abspath(config_path)  # Convert to absolute path
+    model_path = config["model"]["save_path"]
 
     # Load configuration
     config = load_config(config_path)
@@ -39,7 +41,7 @@ def main():
 
     # Set up the model and tokenizer
     model, tokenizer = setup_model_and_tokenizer(
-        model_name=config["model"]["save_path"],
+        model_name=model_path,
     )
 
     # Evaluate the model
@@ -51,6 +53,7 @@ def main():
     print(f"BLEU Score (French → Moore): {bleu_results['fr_to_moore_bleu']:.2f}")
     print(f"BLEU Score (Moore → French): {bleu_results['moore_to_fr_bleu']:.2f}")
     print(f"Average BLEU Score: {bleu_results['average_bleu']:.2f}")
-
+    with open(f"{model_path}/bleu_results.json", "w") as f:
+        json.dump(bleu_results, f, indent=4)
 if __name__ == "__main__":
     main()
