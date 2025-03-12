@@ -4,6 +4,7 @@ from sacrebleu import corpus_bleu
 from tqdm.auto import tqdm
 from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
 from moore_tsr.data.preprocessing import preprocess_text
+import torch
 
 def calculate_bleu_scores(
     model: AutoModelForSeq2SeqLM,
