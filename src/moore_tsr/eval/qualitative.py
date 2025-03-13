@@ -1,5 +1,6 @@
 import pandas as pd
 from typing import List, Dict
+import plotly.express as px
 from transformers import AutoModelForSeq2SeqLM, NllbTokenizer
 from moore_tsr.data.preprocessing import preprocess_text
 
@@ -67,3 +68,56 @@ def display_translation_examples(examples: List[Dict[str, str]]):
         print(f"Source ({example['direction']}): {example['source']}")
         print(f"Référence: {example['reference']}")
         print(f"Traduction: {example['translation']}")
+
+
+def create_loss_visualization(train_losses, val_losses, step_markers, save_path, drive_save_path=None):
+    """Create and save visualization of training and validation losses."""
+    # Create DataFrame for plotting
+    train_df = pd.DataFrame({
+        "Step": range(len(train_losses)),
+        "Loss": train_losses,
+        "Type": "Training"
+    })
+    
+    val_df = pd.DataFrame({
+        "Step": step_markers,
+        "Loss": val_losses,
+        "Type": "Validation"
+    })
+    
+    df_combined = pd.concat([train_df, val_df], ignore_index=True)
+    
+    # Create plot
+    fig = px.line(
+        df_combined, 
+        x="Step", 
+        y="Loss", 
+        color="Type",
+        title="Training and Validation Loss",
+        template="plotly_white"
+    )
+    
+    # Add smoothed training loss line
+    if len(train_losses) > 100:
+        window_size = min(100, len(train_losses) // 10)
+        train_smooth = np.convolve(train_losses, np.ones(window_size)/window_size, mode='valid')
+        smooth_steps = range(window_size-1, len(train_losses))
+        
+        fig.add_scatter(
+            x=smooth_steps, 
+            y=train_smooth, 
+            mode='lines',
+            line=dict(color='rgba(0,0,255,0.5)', width=2),
+            name='Training (Smoothed)'
+        )
+    
+    # Save plot
+    plot_path = f"{save_path}/training_validation_loss.html"
+    fig.write_html(plot_path)
+    logger.info(f"Loss visualization saved to {plot_path}")
+    
+    # Save to Google Drive if mounted
+    if drive_save_path:
+        drive_plot_path = f"{drive_save_path}/training_validation_loss.html"
+        fig.write_html(drive_plot_path)
+        logger.info(f"Loss visualization also saved to {drive_plot_path}")
