@@ -15,16 +15,16 @@ from moore_tsr.eval import create_loss_visualization, evaluate_model_loss
 from moore_tsr.utils.helpers import save_model_and_tokenizer, get_batch_pairs, cleanup
 
 
-
+@torch.compile
 def tokenize_batch(tokenizer, texts, lang_code, max_length, device):
     """Tokenize a batch of texts with appropriate language code."""
+    tokenizer.src_lang = lang_code
     inputs = tokenizer(
         texts, 
         return_tensors="pt", 
         padding=True, 
         truncation=True, 
         max_length=max_length,
-        src_lang=lang_code if lang_code else None
     )
     return {k: v.to(device) for k, v in inputs.items()}
 
