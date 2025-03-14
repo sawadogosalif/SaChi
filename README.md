@@ -1,7 +1,7 @@
 To do
 
 ```mermaid
-flowchart TD
+flowchart LR
     A[Début] --> B[Initialisation du modèle]
     B --> C[Gestion de nouveau token moore_Latn]
     C --> D[Configuration de l'optimiseur et du scheduler]
