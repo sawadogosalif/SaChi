@@ -1,10 +1,13 @@
 from typing import Dict, List
 import pandas as pd
+from loguru import logger
 from sacrebleu import corpus_bleu
 from tqdm.auto import tqdm
-from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
-from moore_tsr.data.preprocessing import preprocess_text
 import torch
+from transformers import AutoModelForSeq2SeqLM, AutoTokenizer
+
+from moore_tsr.data.preprocessing import preprocess_text
+from moore_tsr.utils.helpers import get_batch_pairs, cleanup
 
 def calculate_bleu_scores(
     model: AutoModelForSeq2SeqLM,
@@ -101,3 +104,40 @@ def evaluate_model_with_bleu(
         "moore_to_fr_bleu": moore_to_fr["bleu_score"],
         "average_bleu": (fr_to_moore["bleu_score"] + moore_to_fr["bleu_score"]) / 2,
     }
+
+
+def evaluate_model_loss(model, tokenizer, eval_df, batch_size=16, max_length=128, device="cuda"):
+    """Evaluate model on validation data and return loss."""
+    model.eval()
+    total_loss = 0.0
+    batches = 0
+    cleanup()
+
+    with torch.no_grad():
+        for i in range(0, len(eval_df), batch_size):
+            try:
+                src_texts, tgt_texts, src_lang, tgt_lang = get_batch_pairs(
+                    eval_df, batch_size
+                )
+                with torch.cuda.amp.autocast():
+                    tokenizer.src_lang = src_lang
+                    x = tokenizer(src_texts, return_tensors='pt', padding=True, 
+                            truncation=True, max_length=max_length).to(model.device)
+                
+                    tokenizer.src_lang = tgt_lang
+                    y = tokenizer(tgt_texts, return_tensors='pt', padding=True, 
+                            truncation=True, max_length=max_length).to(model.device)
+                    y.input_ids[y.input_ids == tokenizer.pad_token_id] = -100
+                    
+                    outputs = model(**x, labels=y.input_ids)
+                    loss = outputs.loss
+                
+                total_loss += loss.item()
+                batches += 1
+            except RuntimeError as e:
+                logger.error(f"Error during evaluation: {e}")
+                cleanup()
+                continue
+    
+    model.train()
+    return total_loss / max(1, batches)
