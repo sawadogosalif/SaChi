@@ -26,7 +26,7 @@ def tokenize_batch(tokenizer, texts, lang_code, max_length, device):
         truncation=True, 
         max_length=max_length,
     )
-    return {k: v.to(device) for k, v in inputs.items()}
+    return inputs.to(device)
 
 
 
