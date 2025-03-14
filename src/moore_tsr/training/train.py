@@ -99,7 +99,8 @@ def train_model(
         progress_bar = tqdm(range(0, len(train_df), batch_size), desc=f"Epoch {epoch+1}")
         
         for i in progress_bar:
-            # Reset gradients at the beginning of accumulation steps
+            # Reset gradients at the beginning of accumulation 
+            cleanup()
             if global_step % accumulation_steps == 0:
                 optimizer.zero_grad(set_to_none=True)
             
