@@ -1,4 +1,4 @@
-To do
+Ce travail est en grande partie inspiré du blog de https://github.com/avidale/
 
 ```mermaid
 flowchart LR
