@@ -6,10 +6,10 @@ model:
 training:
   batch_size: 16
   num_epochs: 3
-  learning_rate: 5e-5
+  learning_rate: 1e-4
   warmup_steps: 1000
   max_length: 128
-  accumulation_steps: 4
+  accumulation_steps: 1
   eval_steps: 1000
   save_steps: 5000
   early_stopping_patience: 5
@@ -22,7 +22,7 @@ data:
   train_size: 0.8
   test_size: 0.1
   val_size: 0.1
-  random_seed: 42
+  random_seed: 2025
   src_col: "source"
   tgt_col: "target"
   src_lang_col: "src_lang"

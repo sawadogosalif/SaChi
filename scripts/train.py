@@ -55,11 +55,11 @@ def main():
     warmup_steps = args.warmup_steps or config['training'].get('warmup_steps', 1000)
     
     # Advanced training parameters
-    accumulation_steps = args.accumulation_steps or config['training'].get('accumulation_steps', 4)
+    accumulation_steps = args.accumulation_steps or config['training'].get('accumulation_steps', 1)
     eval_steps = args.eval_steps or config['training'].get('eval_steps', 1000)
     save_steps = args.save_steps or config['training'].get('save_steps', 5000)
     early_stopping_patience = args.early_stopping_patience or config['training'].get('early_stopping_patience', 5)
-    fp16 = args.fp16 or config['training'].get('fp16', True)
+    fp16 = args.fp16 or config['training'].get('fp16', False)
     resume_from = args.resume_from or config['training'].get('resume_from', None)
     
     # Log configuration
