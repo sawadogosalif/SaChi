@@ -1,7 +1,7 @@
-Ce travail est en grande partie inspiré du blog de https://github.com/avidale/
+Ce travail est en grande partie inspiré par David Dale [site](https://daviddale.ru/)
 
 ```mermaid
-flowchart LR
+flowchart TD
     A[Début] --> B[Initialisation du modèle]
     B --> C[Gestion de nouveau token moore_Latn]
     C --> D[Configuration de l'optimiseur et du scheduler]
