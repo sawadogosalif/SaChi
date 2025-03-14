@@ -9,6 +9,13 @@ training:
   learning_rate: 5e-5
   warmup_steps: 1000
   max_length: 128
+  accumulation_steps: 4
+  eval_steps: 1000
+  save_steps: 5000
+  early_stopping_patience: 5
+  fp16: true
+  resume_from: null
+  max_grad_norm: 1.0
 
 data:
   dataset_name: "sawadogosalif/MooreFRCollections"
@@ -16,6 +23,10 @@ data:
   test_size: 0.1
   val_size: 0.1
   random_seed: 42
+  src_col: "source"
+  tgt_col: "target"
+  src_lang_col: "src_lang"
+  tgt_lang_col: "tgt_lang"
 
 evaluation:
   num_samples: 10
