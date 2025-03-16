@@ -1,0 +1,3 @@
+[submodule "app_hugginfae_zero_GPU"]
+	path = app_hugginfae_zero_GPU
+	url = https://huggingface.co/spaces/sawadogosalif/MooreFr-SaChi-demo/tree/main
